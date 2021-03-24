@@ -63,16 +63,23 @@
   (mul (mmul (transpose w) delta) (sigmoid-prime z))
 )
 
-(defn backprop [x w b]
-  (let [layers  (reduce propadd [x] (into [] (zipmap w b))) outp [4 5 6 7]
+(defn backprop [x w b y]
+  (let [layers  (reduce propadd [x] (into [] (zipmap w b))) 
         ]
-    (loop [layer (- (count layer-sizes) 2) result (conj '() (delta (last layers) outp))]
+    (loop [layer (- (count layer-sizes) 2) result (conj '() (delta (last layers) y))]
       (if (< layer 0)
          result
         (recur (dec layer)  (conj result 
                                         (deltal (weights layer) (layers layer) (first result)) 
                       
- ) )) )
+ ))))
+))
+
+(defn update-mini-batch "update weights and biases applying gradient descent using backprop"
+  [mini-batch eta]
+  (let [m (count mini-batch) x (first mini-batch) y (second mini-batch)]
+ (sub biases (mul (/ eta m)  (backprop x weights biases y) ))   
+
 ))
 
 (defn -main
