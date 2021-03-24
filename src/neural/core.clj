@@ -67,8 +67,10 @@
   (let [layers  (reduce propadd [x] (into [] (zipmap w b))) 
         ]
     (loop [layer (- (count layer-sizes) 2) result (conj '() (delta (last layers) y))]
-      (if (< layer 0)
-         result
+
+      (if (< layer 1)
+        (into [] result)
+
         (recur (dec layer)  (conj result 
                                         (deltal (weights layer) (layers layer) (first result)) 
                       
@@ -79,6 +81,15 @@
   [mini-batch eta]
   (let [m (count mini-batch) x (first mini-batch) y (second mini-batch)]
  (sub biases (mul (/ eta m)  (backprop x weights biases y) ))   
+
+))
+
+(defn update-mini-batch "update weights and biases applying gradient descent using backprop"
+  [mini-batch eta]
+  (let [m (count mini-batch) x (first mini-batch) y (second mini-batch)]
+    (map sub biases
+         (mul (/ eta m)  (backprop x weights biases y) )
+)
 
 ))
 
