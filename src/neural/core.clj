@@ -9,6 +9,10 @@
   (let [data (csv/read-csv reader)]
     (nth data row-index)))
 
+(defn mmul2 "makes an nxm matrix out of n element vec1 and m element vec2" [vec1 vec2]
+  (mmul (transpose [vec1]) [vec2]) )
+
+
 
 (defn activate 
 "Sigmoid activation function"
@@ -69,7 +73,7 @@
     (loop [layer (- (count layer-sizes) 2) result (conj '() (delta (last layers) y))]
 
       (if (< layer 1)
-        (into [] result)
+        [(into [] result) layers]
 
         (recur (dec layer)  (conj result 
                                         (deltal (weights layer) (layers layer) (first result)) 
@@ -77,21 +81,17 @@
  ))))
 ))
 
-(defn update-mini-batch "update weights and biases applying gradient descent using backprop"
-  [mini-batch eta]
-  (let [m (count mini-batch) x (first mini-batch) y (second mini-batch)]
- (sub biases (mul (/ eta m)  (backprop x weights biases y) ))   
-
-))
 
 (defn update-mini-batch "update weights and biases applying gradient descent using backprop"
   [mini-batch eta]
-  (let [m (count mini-batch) x (first mini-batch) y (second mini-batch)]
-    (map sub biases
-         (mul (/ eta m)  (backprop x weights biases y) )
-)
+(let [m (count mini-batch)]
+  (for [sample mini-batch 
+:let [x (first sample) y (second sample) bp (backprop x weights biases y)]]
 
-))
+ ;   (map sub biases (mul (/ eta m) (second bp) )      )
+    (map sub weights (let [[bs layers] bp] (mul (/ eta m) (map mmul2 bs (drop-last layers) ))))      
+
+    )))
 
 (defn -main
   "main"
