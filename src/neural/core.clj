@@ -5,11 +5,29 @@
 
 (require '[clojure.data.csv :as csv] '[clojure.java.io :as io])
 
+(defn label-to-vec "turns a label into a vector of zeros with the label index 1, e.g. 5 --> [0 0 0 0 0 1 0 0 0 0]" [label]
+  (loop [index 0 vec [] ]
+    (if (> index 9) vec
+   (recur (inc index)  (conj vec (if (== index label) 1 0))))
+  ))
+
 (defn read-row [reader row-index]
   (let [data (csv/read-csv reader)]
     (nth data row-index)))
 
-(defn mmul2 "makes an nxm matrix out of n element vec1 and m element vec2" [vec1 vec2]
+(defn make-batch [filename start-row number]
+  
+    (with-open [reader (io/reader filename)]
+       (let [data (csv/read-csv reader)]
+   (for [index (range number (+ start-row number))     
+        :let [row-data (->>  (nth data index)
+               (map #(Double/parseDouble %)))]]
+     (println (first row-data))
+                                        ;[(rest data)(label-to-vec (first data))]
+         ))))
+
+
+(defn mmul2 "makes an n x m matrix out of n element vec1 and m element vec2" [vec1 vec2]
   (mmul (transpose [vec1]) [vec2]) )
 
 
@@ -86,14 +104,15 @@
   [mini-batch eta]
 (let [m (count mini-batch)]
   (for [sample mini-batch 
-:let [x (first sample) y (second sample) bp (backprop x weights biases y)]]
+:let [x (first sample) y (second sample) bp (backprop x weights biases y)]] ;x input y labels
 
- ;   (map sub biases (mul (/ eta m) (second bp) )      )
-    (map sub weights (let [[bs layers] bp] (mul (/ eta m) (map mmul2 bs (drop-last layers) ))))      
+    [(map sub biases (mul (/ eta m) (first bp) )      )
+     (map sub weights (let [[bs layers] bp] (mul (/ eta m) (map mmul2 bs (drop-last layers) ))))]
 
-    )))
+    ))
+  )
 
-(defn -main
-  "main"
-  [& args]
-   (propagate args))
+  (defn -main
+    "main"
+    [& args]
+    (propagate args))
