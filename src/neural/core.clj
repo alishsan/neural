@@ -1,3 +1,4 @@
+
 (ns neural.core
   (:gen-class))
 
@@ -19,11 +20,11 @@
   
 (with-open [reader (io/reader filename)]
 (let [data (csv/read-csv reader)]
-  (loop [index start-row]
-    (if (> index (+ start-row number))  (let [row-data (->>  (nth data index)
-                                                             (map #(Long/parseLong %)))]
-                                          [(rest row-data)(label-to-vec (first row-data))])
-        (recur (inc index)))
+  (loop [index start-row result []]
+    (if (>= index (+ start-row number)) result 
+        (recur (inc index) (conj result (vec (let [row-data (->>  (nth data index)
+                                                                  (map #(Long/parseLong %)))]
+                                               [(rest row-data) (label-to-vec (first row-data))])))))
 )
     )))
 
@@ -41,7 +42,7 @@
 
 (defn sigmoid-prime [a] (let [b (activate a)] (mul b (sub 1 b))))
 
-(def layer-sizes [2,3,4])
+(def layer-sizes [784,30,10])
 
 (def weight-shapes (into [] (zipmap (rest layer-sizes) (drop-last layer-sizes))))
 
@@ -60,7 +61,7 @@
   ( activate (add (mmul w x) b)))
 
 (defn propagate "propagate weights and biases from the input layer to the output layer"
-[x w b]
+  [x [w b]]
 (reduce propagate1 x (into [] (zipmap w b)))
 )
 
@@ -101,18 +102,16 @@
  ))))
 ))
 
+(defn grad-desc "gradient descent for one sample" [[b w] sample]
+ (let  [x (first sample) y (second sample) bp (backprop x w b y) eta 1] ;x input y labels
 
-(defn update-mini-batch "update weights and biases applying gradient descent using backprop"
-  [mini-batch eta]
-(let [m (count mini-batch)]
-  (for [sample mini-batch 
-:let [x (first sample) y (second sample) bp (backprop x weights biases y)]] ;x input y labels
+   [(map sub b (mul eta (first bp) )      ) (map sub w (let [[bs layers] bp] (mul eta (map mmul2 bs (drop-last layers) ))))]))
 
-    [(map sub biases (mul (/ eta m) (first bp) )      )
-     (map sub weights (let [[bs layers] bp] (mul (/ eta m) (map mmul2 bs (drop-last layers) ))))]
 
-    ))
-  )
+
+(defn update-mini-batch "update weights and biases applying gradient descent using backprop"  [mini-batch eta]
+ 
+  (reduce grad-desc [biases weights] mini-batch))
 
   (defn -main
     "main"
