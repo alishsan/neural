@@ -17,15 +17,17 @@
 
 (defn make-batch [filename start-row number]
   
-    (with-open [reader (io/reader filename)]
-       (let [data (csv/read-csv reader)]
-   (for [index (range number (+ start-row number))     
-        :let [row-data (->>  (nth data index)
-               (map #(Double/parseDouble %)))]]
-     (println (first row-data))
-                                        ;[(rest data)(label-to-vec (first data))]
-         ))))
+(with-open [reader (io/reader filename)]
+(let [data (csv/read-csv reader)]
+  (loop [index start-row]
+    (if (> index (+ start-row number))  (let [row-data (->>  (nth data index)
+                                                             (map #(Long/parseLong %)))]
+                                          [(rest row-data)(label-to-vec (first row-data))])
+        (recur (inc index)))
+)
+    )))
 
+ 
 
 (defn mmul2 "makes an n x m matrix out of n element vec1 and m element vec2" [vec1 vec2]
   (mmul (transpose [vec1]) [vec2]) )
