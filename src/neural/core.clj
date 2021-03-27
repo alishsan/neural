@@ -102,16 +102,16 @@
  ))))
 ))
 
-(defn grad-desc "gradient descent for one sample" [[b w] sample]
- (let  [x (first sample) y (second sample) bp (backprop x w b y) eta 1] ;x input y labels
+(defn grad-desc "gradient descent for one sample" [ [ eta w b] sample]
+ (let  [x (first sample) y (second sample) bp (backprop x w b y)] ;x input y labels
 
-   [(map sub b (mul eta (first bp) )      ) (map sub w (let [[bs layers] bp] (mul eta (map mmul2 bs (drop-last layers) ))))]))
+   [ eta (map sub w (let [[bs layers] bp] (mul eta (map mmul2 bs (drop-last layers) )))) (map sub b (mul eta (first bp) ) ) ]))
 
 
 
 (defn update-mini-batch "update weights and biases applying gradient descent using backprop"  [mini-batch eta]
  
-  (reduce grad-desc [biases weights] mini-batch))
+  (rest (reduce grad-desc [(/ eta (count mini-batch)) weights biases] mini-batch)))
 
   (defn -main
     "main"
