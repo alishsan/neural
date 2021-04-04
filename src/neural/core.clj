@@ -1,10 +1,14 @@
 
 (ns neural.core
-  (:gen-class))
+  (:gen-class)
+
+)
 
 (use 'clojure.core.matrix)
 
-(require '[clojure.data.csv :as csv] '[clojure.java.io :as io])
+(require '[clojure.data.csv :as csv] '[clojure.java.io :as io])  
+
+(require '[incanter.core :as ic]  '[incanter.charts :as ich] '[incanter.stats :as is])
 
 (defn label-to-vec "turns a label into a vector of zeros with the label index 1, e.g. 5 --> [0 0 0 0 0 1 0 0 0 0]" [label]
   (loop [index 0 vec [] ]
@@ -65,7 +69,7 @@
 (reduce propagate1 x (into [] (zipmap w b)))
 )
 
-(defn accuracy [predictions label] (== label (.indexOf predictions (apply max predictions)))
+(defn accuracy [predictions label] (let [z (map (fn [x y] (if  (= y (.indexOf x (apply max x))) 1 0)) predictions label)] (/ (apply + z) (count z)) )
 )
 
 (defn matsq "square matrix multiplication "[x] (mmul x x)) 
